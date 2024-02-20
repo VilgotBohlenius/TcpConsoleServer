@@ -1,5 +1,7 @@
 ﻿using Fish.Networking;
+using System.Diagnostics.Metrics;
 using System.Net;
+using System.Numerics;
 
 namespace ConsoleServer
 {
@@ -10,61 +12,94 @@ namespace ConsoleServer
             const int port = 8554;
             string ip = "127.0.0.1";
 
-            Server server = new Server();
-            Client client = new Client();
+            bool isServer = false;
 
-            bool isHost = false;
+            Console.WriteLine("[1] Host a local server.\n[2] Host a public server.\n[3] Connect to a local server.\n[4] Connect to a public server.");
 
-            Console.WriteLine("Please enter the target IP address.\n * /l to host a local server.\n * /h to host a public server.");
+            IPAddress? ipAdress;
 
-            switch (Console.ReadLine()!)
+            ConsoleKeyInfo key = Console.ReadKey(true);
+            switch (key.Key)
             {
-                case "/l":
-                    isHost = true;
+                case ConsoleKey.D1:
+                    isServer = true;
 
+                    Console.Clear();
+                    Console.WriteLine("Starting local server...");
                     break;
-                case "/h":
-                    isHost = true;
-
-                    goto default;
-                default:
-                    bool validIp = false;
-                    while (!validIp)
+                case ConsoleKey.D2:
+                    isServer = true;
                     {
-                        Console.WriteLine("Please enter IPV4 adress.");
+                        Console.Clear();
 
-                        validIp = IPAddress.TryParse(Console.ReadLine()!, out IPAddress? ipAdress) && ipAdress is not null;
-                        if (!validIp)
+                        bool validIp = true;
+                        do
                         {
-                            Console.WriteLine($"Ip '{ipAdress}' is not a valid ip.");
-                        }
+                            if(!validIp)
+                                Console.WriteLine("Invalid IP");
+
+                            Console.WriteLine("Please enter local IPV4-adress");
+                        } while (!(validIp = IPAddress.TryParse(Console.ReadLine(), out ipAdress)) || ipAdress is null);
 
                         ip = ipAdress.ToString();
+
+                        Console.Clear();
+                        Console.WriteLine("Starting public server...");
                     }
+                    break;
+                case ConsoleKey.D3:
+                    Console.Clear();
+                    Console.WriteLine("Trying to connect to local server...");
+                    break;
+                case ConsoleKey.D4:
+                    {
+                        Console.Clear();
+
+                        bool validIp = true;
+                        do
+                        {
+                            if (!validIp)
+                                Console.WriteLine("Invalid IP");
+
+                            Console.WriteLine("Please enter local IPV4-adress");
+                        } while (!(validIp = IPAddress.TryParse(Console.ReadLine(), out ipAdress)) || ipAdress is null);
+
+                        ip = ipAdress.ToString();
+
+                        Console.Clear();
+                        Console.WriteLine("Trying to connect to public server...");
+                    }
+                    break;
+                default:
+                    Console.WriteLine("Invalid key");
+                    Console.ReadKey(true);
                     break;
             }
 
-            Console.WriteLine($"Using '{ip}'");
-
-            if (isHost)
+            if(isServer)
             {
-                server.Start(ip, port, 2);
+                Server(ip, port);
             }
             else
             {
-                client.Connect(ip, port);
+                Client(ip, port);
             }
+        }
+
+        static void Server(string ip, int port)
+        {
+            Server server = new Server();
+            server.Start(ip, port, 8);
 
             Console.ReadKey();
+        }
 
-            if (isHost)
-            {
-                server.Close();
-            }
-            else
-            {
-                client.Disconnect();
-            }
+        static void Client(string ip, int port)
+        {
+            Client client = new Client();
+            client.Connect(ip, port);
+
+            client.Disconnect();
         }
     }
 }

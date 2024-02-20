@@ -22,6 +22,8 @@ namespace Fish.Networking
 
         public void Connect(string ip, int port)
         {
+            Console.WriteLine($"Client: Trying to connect to '{ip}:{port}'");
+
             tcpClient.BeginConnect(IPAddress.Parse(ip), port, OnConnect, null);
 
             void OnConnect(IAsyncResult result)
